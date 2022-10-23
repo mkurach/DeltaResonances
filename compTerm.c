@@ -28,11 +28,16 @@
 #define _N_PAIRS_ 2 
 #define _N_FIGURES_ 5 
 #define _N_HIST_ 10 
+#define _N_MRANGES_ 25
 
 int colors[]={1, 600, 629, 414, 802, 880, 819, 922,433,618}; // kBlack, kBlue, kRed, kGreen-2, kOrange+2, kGray, kViolet, kSpring
 int markers[]= {20,21,24,25,28,34,47,43}; 
+//int colorsCute[]={kRed+2, kRed, kOrange+7, kOrange-3, kTeal+2, kAzure+10, kAzure+7, kAzure+2,kAzure-1,kBlue+2};
+int colorsCute[]={kBlue+2, kAzure-1, kAzure+2, kAzure+7, kAzure+10, kTeal+2, kOrange-3,kOrange+7,kRed,kRed+2};
 
 TVirtualPad*** GetGridPad(Int_t x_pads, Int_t y_pads, Float_t x_margin, Float_t y_margin) {
+	gStyle->SetCanvasColor(0);
+	gStyle->SetPadColor(kWhite);
     TPad* padsav = (TPad*) gPad;
 	if (gPad == NULL) {
 		TCanvas* c = new TCanvas();
@@ -311,8 +316,10 @@ void multiplePlot(TH1D *histTab[], TCanvas* can, TString* entry, size_t n, bool 
         //histTab[i]->SetMarkerStyle(markers[i]);
         histTab[i]->SetMarkerStyle(markers[0]);
         histTab[i]->SetMarkerSize(0.8);
-        histTab[i]->SetMarkerColor(colors[i]);
-        histTab[i]->SetLineColor(colors[i]);
+        //histTab[i]->SetMarkerColor(colorsCute[i]);
+        //histTab[i]->SetLineColor(colorsCute[i]);
+		histTab[i]->SetMarkerColor(kBlue+3);
+        histTab[i]->SetLineColor(kBlue+3);
 
         if(scaling && i!=0)
                 legend->AddEntry(histTab[i],TString::Format("%s (x10^{%i})",entry[i].Data(),i));
@@ -358,7 +365,7 @@ void readingHist(TH1D* H1D[][_N_FIGURES_][_N_HIST_], TFile* file, TString pairsT
 				//H1D[i][j][0]->Sumw2(kFALSE);
 				//H1D[i][j][0]->Sumw2();		
 			}
-			else {
+			else if (j== 1 || j == 2) {
 				for (int k = 0; k < _N_HIST_; k++) {
 					H1D[i][j][k] = (TH1D*)file->Get(Form("%s%s%i",pairsTitlesDiff[i].Data(),histNames[j].Data(),k));
 					
@@ -369,6 +376,19 @@ void readingHist(TH1D* H1D[][_N_FIGURES_][_N_HIST_], TFile* file, TString pairsT
 					//H1D[i][j][k]->Sumw2(kFALSE);
 					//H1D[i][j][k]->Sumw2();
 				}
+			}
+			else {
+				for (int k = 0; k < _N_MRANGES_; k++) {
+					H1D[i][j][k] = (TH1D*)file->Get(Form("%s%s%i",pairsTitlesDiff[i].Data(),histNames[j].Data(),k));
+					
+
+					H1D[i][j][k]->Rebin(10);
+					H1D[i][j][k]->Scale(1.0/(events*dX[j]*10));
+					
+					//H1D[i][j][k]->Sumw2(kFALSE);
+					//H1D[i][j][k]->Sumw2();
+				}
+
 			}
 
 		}
@@ -427,7 +447,7 @@ void firstFiveHist(TH1D* H1D[][_N_FIGURES_][_N_HIST_], TString Case, TString out
 
 
 	TCanvas *can7 = new TCanvas("PtM+","PtM+",2000,2000);
-    multiplePlot(H1D[0][4],can7,MRanges,10); 
+    multiplePlot(H1D[0][4],can7,MRanges,25); 
     makePaveText(can7,Case,0.73,0.4,0.99,0.5,0.05);
     makePaveText(can7,"#pi^{+}p",0.73,0.35,0.99,0.4,0.05);
     //makePaveText(can7,"1.1 < M_{inv} < 1.4 GeV/c^{2}",0.73,0.32,0.99,0.3,0.04);
@@ -446,8 +466,8 @@ void firstFiveHist(TH1D* H1D[][_N_FIGURES_][_N_HIST_], TString Case, TString out
 }
 
 void newPtPlots(TH1D* H1D[][_N_FIGURES_][_N_HIST_],TString Case, TString outDir,TString pairsTitle[],TString PtRanges[]) {
-    TCanvas *can7 = new TCanvas("MPt+Diff","MPt+Diff",1000,1000);
-    TCanvas *can8 = new TCanvas("MPt-Diff","MPt-Diff",1000,1000);
+    TCanvas *can7 = new TCanvas("MPt+Diff","MPt+Diff",500,700);
+    TCanvas *can8 = new TCanvas("MPt-Diff","MPt-Diff",500,700);
 
     //can7->Divide(1,10);
     //can7->SetFrameLineColor(0);
@@ -468,11 +488,11 @@ void newPtPlots(TH1D* H1D[][_N_FIGURES_][_N_HIST_],TString Case, TString outDir,
 			H1D[j][1][10-(i+1)]->GetYaxis()->SetNdivisions(3);
 			H1D[j][1][10-(i+1)]->GetYaxis()->SetLabelSize(0.16);
 			H1D[j][1][10-(i+1)]->Draw();
-			makePaveText(xpad[0][i],PtRanges[10-(i+1)],0.9,0.9,0.8,0.8,0.12);
+			makePaveText(xpad[0][i],PtRanges[10-(i+1)],0.7,0.8,0.8,0.9,0.12);
 			if(i==0){
-				makePaveText(xpad[0][i],"dN/dM (GeV/c^{2})^{-1}",0.8,0.99,0.03,0.9,0.16);
-				makePaveText(xpad[0][i],Case,0.8,0.99,0.5,0.9,0.16);
-				makePaveText(xpad[0][i],pairsTitle[j],0.8,0.99,0.58,0.9,0.16);
+				//makePaveText(xpad[0][i],"dN/dM (GeV/c^{2})^{-1}",0.8,0.99,0.03,0.9,0.16);
+				makePaveText(xpad[0][i],Case,0.07,0.8,0.3,0.9,0.16);
+				makePaveText(xpad[0][i],pairsTitle[j],0.8,0.8,0.58,0.9,0.16);
 			}
 			if(i == 9) {
 				H1D[j][1][10-(i+1)]->GetXaxis()->SetTitleSize(0.16);
@@ -486,6 +506,9 @@ void newPtPlots(TH1D* H1D[][_N_FIGURES_][_N_HIST_],TString Case, TString outDir,
     can7->SaveAs(outDir+Case+"_MPt+Diff.png");
     can8->SaveAs(outDir+Case+"_MPt-Diff.png");
 
+	can7->SaveAs("/u/mkurach/figures_with_data/moje/ladne/"+Case+"MPt+Diff.pdf");
+    can8->SaveAs("/u/mkurach/figures_with_data/moje/ladne/"+Case+"MPt-Diff.pdf");
+
 }
 
 
@@ -497,8 +520,12 @@ void createHistogramsComp (TString fIn, TString Case, TString outDir) {
     TString histNames[_N_FIGURES_] = {"MHist","MPtHist","PtYHist", "YHist", "PtMHist"};
     TString PtRanges[_N_HIST_] = {"p_{T} < 0.15 GeV/c", "0.15 #leq p_{T} < 0.3 GeV/c", "0.3 #leq p_{T} < 0.45 GeV/c","0.45 #leq p_{T} < 0.6 GeV/c","0.6 #leq p_{T} < 0.75 GeV/c","0.75 #leq p_{T} < 0.9 GeV/c","0.9 #leq p_{T} < 1.05 GeV/c","1.05 #leq p_{T} < 1.2 GeV/c","1.2 #leq p_{T} < 1.35 GeV/c","1.35 #leq p_{T} < 1.6 GeV/c"};   
 	TString YRanges[_N_HIST_] = {"0 #leq y < 0.14", "0.14 #leq y < 0.34", "0.34 #leq y < 0.49","0.49 #leq y < 0.64", "0.64 #leq y < 0.74", "0.74 #leq y < 0.84", "0.84 #leq y < 0.99", "0.99 #leq y < 1.14", "1.14 #leq y 1.34", "1.34 #leq y #leq 1.8"};
-	TString MRanges[_N_HIST_] = {"1 #leq M < 1.1","1.1 #leq M < 1.15","1.15 #leq M < 1.2","1.2 #leq M < 1.25","1.25 #leq M < 1.3","1.3 #leq M < 1.35","1.35 #leq M < 1.4","1.4 #leq M < 1.45","1.45 #leq M < 1.5","1.5 #leq M < 1.6"};
-    
+	//TString MRanges[_N_HIST_] = {"1 #leq M < 1.1","1.1 #leq M < 1.15","1.15 #leq M < 1.2","1.2 #leq M < 1.25","1.25 #leq M < 1.3","1.3 #leq M < 1.35","1.35 #leq M < 1.4","1.4 #leq M < 1.45","1.45 #leq M < 1.5","1.5 #leq M < 1.6"};
+        TString MRanges[_N_MRANGES_] = {"1.078 #leq M < 1.09","1.09 #leq M < 1.1","1.1 #leq M < 1.11","1.11 #leq M < 1.12","1.12 #leq M < 1.13",
+                                "1.13 #leq M < 1.14","1.14 #leq M < 1.15","1.15 #leq M < 1.16","1.16 #leq M < 1.17","1.17 #leq M < 1.18",
+                                "1.18 #leq M < 1.19","1.19 #leq M < 1.2","1.2 #leq M < 1.22","1.22 #leq M < 1.24","1.24 #leq M < 1.28",
+                                "1.28 #leq M < 1.32","1.32 #leq M < 1.36","1.36 #leq M < 1.4","1.4 #leq M < 1.44","1.44 #leq M < 1.48",
+                                "1.48 #leq M < 1.52","1.52 #leq M < 1.56","1.56 #leq M < 1.6","1.6 #leq M < 1.65","1.65 #leq M < 1.7"};
     
 	//gROOT->SetBatch(kTRUE);
 
@@ -522,9 +549,9 @@ void createHistogramsComp (TString fIn, TString Case, TString outDir) {
 
 void compTerm() {
 
-	//createHistogramsComp("~/pairs/outputBig/outCaseA.root","CaseA","~/pairs/outputBig/");
-	createHistogramsComp("~/pairs/outputBig/outCaseB.root","CaseB","~/pairs/outputBig/");
-	//createHistogramsComp("~/pairs/outputBig/outCaseC.root","CaseC","~/pairs/outputBig/");
+  	//createHistogramsComp("~/pairs/outputBig/outCaseA.root","CaseA","~/pairs/outputBig/");
+	//createHistogramsComp("~/pairs/outputBig/outCaseB.root","CaseB","~/pairs/outputBig/");
+	createHistogramsComp("~/pairs/outputBig/outCaseC.root","CaseC","~/pairs/outputBig/");
 
 
 }

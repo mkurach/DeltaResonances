@@ -32,9 +32,10 @@
 //SCALE WYWOLUJE SUMW2, JESLI NIE CHCE SUMW2 TRZEBA DAC INNA OPCJE "nosw2"
 
 #define _N_PAIRS_ 2 //2 pairs pi+p, pi-p
-#define _N_FIGURES_ 5 //5 different types of figures to draw
+#define _N_FIGURES_ 6 //6 different types of figures to draw
 #define _N_HIST_ 10 //maximum of 10 different histograms per figure
 #define _N_PARTICLES_ 4 //collecting 4 things: 2 pairs, delta++ and delta0
+#define _N_MRANGES_ 25
 
 TChain* addMultEvents2Chain(TString commaSeparatedList, ParticleCoor* aParticle, Int_t* aEvents){
 
@@ -155,7 +156,7 @@ int histIndexY(TLorentzVector vec) {
 	Double_t y = vec.Rapidity();
 	Double_t m = vec.M();
 	if (m > 1.1 && m < 1.4) {
-		if (y < 0.14)		return 0;
+		if (y >= 0 && y < 0.14)		return 0;
 		else if (y >= 0.14 && y < 0.34)		return 1;
 		else if (y >= 0.34 && y < 0.49)		return 2;
 		else if (y >= 0.49 && y < 0.64)		return 3;
@@ -172,7 +173,7 @@ int histIndexY(TLorentzVector vec) {
 
 }
 
-int histIndexM(TLorentzVector vec) {
+/*int histIndexM(TLorentzVector vec) {
 	Double_t y = vec.Rapidity();
 	Double_t m = vec.M();
 	if(y >= 0.24 && y <= 1.24) {
@@ -190,9 +191,43 @@ int histIndexM(TLorentzVector vec) {
 	}
 	else return -1;
 
+}*/
+
+int histIndexM(TLorentzVector vec) {
+	Double_t y = vec.Rapidity();
+	Double_t m = vec.M();
+	if(y >= 0.24 && y <= 1.24) {
+		if (m >= 1.078 && m < 1.09)		return 0;
+		else if (m >= 1.09 && m < 1.1)		return 1;
+		else if (m >= 1.1 && m < 1.11)		return 2;
+		else if (m >= 1.11 && m < 1.12)		return 3;
+		else if (m >= 1.12 && m < 1.13)		return 4;
+		else if (m >= 1.13 && m < 1.14)		return 5;
+		else if (m >= 1.14 && m < 1.15)		return 6;
+		else if (m >= 1.15 && m < 1.16)		return 7;
+		else if (m >= 1.16 && m < 1.17)		return 8;
+		else if (m >= 1.17 && m < 1.18)		return 9;
+		else if (m >= 1.18 && m < 1.19)		return 10;
+		else if (m >= 1.19 && m < 1.2)		return 11;
+		else if (m >= 1.2 && m < 1.22)		return 12;
+		else if (m >= 1.22 && m < 1.24)		return 13;
+		else if (m >= 1.24 && m < 1.28)		return 14;
+		else if (m >= 1.28 && m < 1.32)		return 15;
+		else if (m >= 1.32 && m < 1.36)		return 16;
+		else if (m >= 1.36 && m < 1.4)		return 17;
+		else if (m >= 1.4 && m < 1.44)		return 18;
+		else if (m >= 1.44 && m < 1.48)		return 19;
+		else if (m >= 1.48 && m < 1.52)		return 20;
+		else if (m >= 1.52 && m < 1.56)		return 21;
+		else if (m >= 1.56 && m < 1.6)		return 22;
+		else if (m >= 1.6 && m < 1.65)		return 23;
+		else if (m >= 1.65 && m < 1.7)		return 24;
+
+		else return -1;
+	}
+	else return -1;
+
 }
-
-
 
 
 void createHistograms(TString aEventDir, TString aOutDir, Int_t aEventFiles, TString inputList) {
@@ -203,16 +238,22 @@ void createHistograms(TString aEventDir, TString aOutDir, Int_t aEventFiles, TSt
 	vector<Int_t> entriesArr[_N_PARTICLES_];
 	vector<TLorentzVector> pairsArr[_N_PAIRS_];
 
-    TString histNames[_N_FIGURES_] = {"MHist","MPtHist","PtYHist", "YHist","PtMHist"};
-    Int_t XBins[_N_FIGURES_] = {1000, 1000, 1000, 1000,1000};
+    TString histNames[_N_FIGURES_] = {"MHist","MPtHist","PtYHist", "YHist","PtMHist","MtHist"};
+    Int_t XBins[_N_FIGURES_] = {1000, 1000, 1000, 1000,1000,1000};
     Float_t XMin[_N_FIGURES_] = {1, 1, 0, -2.2, 0};
-	Float_t XMax[_N_FIGURES_] = {1.6, 1.6, 1.5, 2.2, 1.5};
-    TString YTitles[_N_FIGURES_] = {"dN/dM (GeV/c^{2})^{-1}","dN/dM (GeV/c^{2})^{-1}","d^{2}N/dp_{T}dy (GeV/c)^{-1}", "dN/dy", "d^{2}N/dp_{T}dM"};
-	TString XTitles[_N_FIGURES_] = {"M_{#pi^{+} p} (GeV/c^{2})","M_{#pi^{-} p} (GeV/c^{2})","p_{T} (GeV/c)","rapidity","p_{T} (GeV/c)"};
+	Float_t XMax[_N_FIGURES_] = {1.6, 1.6, 1.5, 2.2, 1.5,5};
+    TString YTitles[_N_FIGURES_] = {"dN/dM (GeV/c^{2})^{-1}","dN/dM (GeV/c^{2})^{-1}","d^{2}N/dp_{T}dy (GeV/c)^{-1}", "dN/dy", "d^{2}N/dp_{T}dM","dN/dm_{T} (GeV/c^{2})^{-1}"};
+	TString XTitles[_N_FIGURES_] = {"M_{#pi^{+} p} (GeV/c^{2})","M_{#pi^{-} p} (GeV/c^{2})","p_{T} (GeV/c)","rapidity","p_{T} (GeV/c)","m_{T} (GeV/c^{2})"};
 	
-	TString PtRanges[_N_HIST_] = {"p_{T} < 0.15 GeV/c", "0.15 #leq p_{T} < 0.3 GeV/c", "0.3 #leq p_{T} < 0.45 GeV/c","0.45 #leq p_{T} < 0.6 GeV/c","0.6 #leq p_{T} < 0.75 GeV/c","0.75 #leq p_{T} < 0.9 GeV/c","0.9 #leq p_{T} < 1.05 GeV/c","1.05 #leq p_{T} < 1.2 GeV/c","1.2 #leq p_{T} < 1.35 GeV/c","1.35 #leq p_{T} < 1.6 GeV/c"};   
-	TString YRanges[_N_HIST_] = {"0 #leq y < 0.14", "0.14 #leq y < 0.34", "0.34 #leq y < 0.49","0.49 #leq y < 0.64", "0.64 #leq y < 0.74", "0.74 #leq y < 0.84", "0.84 #leq y < 0.99", "0.99 #leq y < 1.14", "1.14 #leq y 1.34", "1.34 #leq y #leq 1.8"};
-	TString MRanges[_N_HIST_] = {"1 #leq M < 1.1","1.1 #leq M < 1.15","1.15 #leq M < 1.2","1.2 #leq M < 1.25","1.25 #leq M < 1.3","1.3 #leq M < 1.35","1.35 #leq M < 1.4","1.4 #leq M < 1.45","1.45 #leq M < 1.5","1.5 #leq M < 1.6"};
+	TString PtRanges[_N_HIST_] = {"p_{T} < 0.15 GeV/c", "0.15 #leq p_{T} < 0.3 GeV/c", "0.3 #leq p_{T} < 0.45 GeV/c","0.45 #leq p_{T} < 0.6 GeV/c","0.6 #leq p_{T} < 0.75 GeV/c",
+								  "0.75 #leq p_{T} < 0.9 GeV/c","0.9 #leq p_{T} < 1.05 GeV/c","1.05 #leq p_{T} < 1.2 GeV/c","1.2 #leq p_{T} < 1.35 GeV/c","1.35 #leq p_{T} < 1.6 GeV/c"};   
+	TString YRanges[_N_HIST_] = {"0 #leq y < 0.14", "0.14 #leq y < 0.34", "0.34 #leq y < 0.49","0.49 #leq y < 0.64", "0.64 #leq y < 0.74",
+								 "0.74 #leq y < 0.84", "0.84 #leq y < 0.99", "0.99 #leq y < 1.14", "1.14 #leq y 1.34", "1.34 #leq y #leq 1.8"};
+	TString MRanges[_N_MRANGES_] = {"1.078 #leq M < 1.09","1.09 #leq M < 1.1","1.1 #leq M < 1.11","1.11 #leq M < 1.12","1.12 #leq M < 1.13",
+									"1.13 #leq M < 1.14","1.14 #leq M < 1.15","1.15 #leq M < 1.16","1.16 #leq M < 1.17","1.17 #leq M < 1.18",
+									"1.18 #leq M < 1.19","1.19 #leq M < 1.2","1.2 #leq M < 1.22","1.22 #leq M < 1.24","1.24 #leq M < 1.28",
+									"1.28 #leq M < 1.32","1.32 #leq M < 1.36","1.36 #leq M < 1.4","1.4 #leq M < 1.44","1.44 #leq M < 1.48",
+									"1.48 #leq M < 1.52","1.52 #leq M < 1.56","1.56 #leq M < 1.6","1.6 #leq M < 1.65","1.65 #leq M < 1.7"};
     string colorHex[] = {gROOT->GetColor(15)->AsHexString(),"#ff6666","#0099cc","#ffcc00","#6666ff","#669966","#ffffff","#ffffff","#ffffff","#ffffff","#ffffff","#ffffff"};
      
     //READING
@@ -277,7 +318,7 @@ void createHistograms(TString aEventDir, TString aOutDir, Int_t aEventFiles, TSt
     
     //HISTOGRAMS - INITILIZE
     
-    TH1D* H1D[_N_PAIRS_][_N_FIGURES_][_N_HIST_];
+    TH1D* H1D[_N_PAIRS_][_N_FIGURES_][_N_MRANGES_];
 
 
     for (int i = 0; i < _N_PAIRS_; i++ ){ //for every pair
@@ -291,22 +332,24 @@ void createHistograms(TString aEventDir, TString aOutDir, Int_t aEventFiles, TSt
 			H1D[i][j][0]->GetYaxis()->SetTitle(YTitles[j]);
 			
 			
-			if(j == 1 || j == 2 || j == 4) { //if it is figure with multiple histograms on it
+			if(j == 1 || j == 2 ) { //if it is figure with multiple histograms on it (10)
 				for (int k = 0; k < _N_HIST_; k++) {
 					if (j == 1 ) {
 					    H1D[i][j][k] = (TH1D*)  H1D[i][j][0]->Clone(Form("%s%s%i",pairsTitlesDiff[i].Data(),histNames[j].Data(),k));
 						H1D[i][j][k]->SetTitle(Form("%s",PtRanges[k].Data()));
 					}
-					else if (j == 2) {
+					else {
 						H1D[i][j][k] = (TH1D*)  H1D[i][j][0]->Clone(Form("%s%s%i",pairsTitlesDiff[i].Data(),histNames[j].Data(),k));
 						H1D[i][j][k]->SetTitle(Form("%s",YRanges[k].Data()));
 					}
-					else {
-						H1D[i][j][k] = (TH1D*)  H1D[i][j][0]->Clone(Form("%s%s%i",pairsTitlesDiff[i].Data(),histNames[j].Data(),k));
-						H1D[i][j][k]->SetTitle(Form("%s",MRanges[k].Data()));
-
-					}
 				}		    
+			}
+			else if(j == 4) { //if it is m ranges
+				for (int k = 0; k < _N_MRANGES_; k++) {
+					H1D[i][j][k] = (TH1D*)  H1D[i][j][0]->Clone(Form("%s%s%i",pairsTitlesDiff[i].Data(),histNames[j].Data(),k));
+					H1D[i][j][k]->SetTitle(Form("%s",MRanges[k].Data()));
+				}
+
 			}
 		}
 	}
@@ -356,6 +399,8 @@ void createHistograms(TString aEventDir, TString aOutDir, Int_t aEventFiles, TSt
 
 					if(indM >= 0)	
 						H1D[j][4][indM]->Fill(lorentz.Pt());
+					if(lorentz.Rapidity() > 0.24 && lorentz.Rapidity() < 1.24)
+						H1D[j][5][0]->Fill(lorentz.Mt());
 				}
 			}
 			
@@ -374,50 +419,28 @@ void createHistograms(TString aEventDir, TString aOutDir, Int_t aEventFiles, TSt
 	}
 	
 
-	//SCALING
-	/*for (int i = 0; i < _N_PAIRS_; i++) {
-		for(int j = 0; j < _N_FIGURES_; j++) {
-			H1D[i][j][0]->Scale(1.0/(Events*dX[j])); //turning off the sumw2: option"nosw2"
-			if (j == 1 || j == 2) {
-				for (int k = 1; k < _N_HIST_; k++)
-					H1D[i][j][k]->Scale(1.0/(Events*dX[j])); 
+	//SAVING
 
-			}
-		}
-	}*/
 
-	//PLOTTING
-
-	//TCanvas* Canvases[_N_FIGURES_][_N_HIST_];
 	TFile *file = new TFile(aOutDir.Data(),"RECREATE");
 	file->cd();
+	 
 
-	for (int i = 0; i < _N_FIGURES_; i++) {
+	for(int i = 0; i < _N_PAIRS_; i++) {
+		for(int j = 0; j < _N_FIGURES_; j++) {
+			if(j == 0 || j == 3 || j == 5)
+				H1D[i][j][0]->Write();
+			else if(j == 1 || j == 2) {
+				for (int k = 0; k < _N_HIST_; k++) 
+					H1D[i][j][k]->Write();
+			}
+			else {
+				for (int k = 0; k < _N_MRANGES_; k++) 
+					H1D[i][j][k]->Write();
 
-		//Canvases[i][0] = new TCanvas(Form("%s %i",histNames[i].Data(),0),Form("%s %i",histNames[i].Data(),0),1000,1000);
-		//Canvases[i][0]->Divide(2);
-		for (int k = 0; k < _N_PAIRS_; k++) {
-			//Canvases[i][0]->cd(k+1);
-			//H1D[k][i][0]->Draw();
-			H1D[k][i][0]->Write();
-		}
-		//Canvases[i][0]->Write();
-
-
-		if (i == 1 || i == 2 || i == 4) {
-			for (int j = 1; j < _N_HIST_; j++) {
-				//Canvases[i][j] = new TCanvas(Form("%s %i",histNames[i].Data(),j),Form("%s %i",histNames[i].Data(),j),1000,1000);	
-				//Canvases[i][j]->Divide(2);
-				for (int k = 0; k < _N_PAIRS_; k++) {
-					//Canvases[i][j]->cd(k+1);
-					//H1D[k][i][j]->Draw();
-					H1D[k][i][j]->Write();
-				}
-				//Canvases[i][j]->Write();
 			}
 		}
 	}
-	 
 	file->Save();
 	file->Close();
 	gROOT->SetBatch(kFALSE);	
@@ -425,13 +448,14 @@ void createHistograms(TString aEventDir, TString aOutDir, Int_t aEventFiles, TSt
 }
 
 
+
 int makeHistTerm(TString inputlist = "", TString outfile = "", Long64_t nDesEvents = -1, Int_t maxFiles = -1) {
 	
 	gROOT -> SetBatch(kTRUE); 
 
-    //createHistograms("/u/mkurach/lustre/hades/user/kjedrzej/HubbDeltLowT/H100E0D2femto",outfile,maxFiles,inputlist);
+    createHistograms("/u/mkurach/lustre/hades/user/kjedrzej/HubbDeltLowT/H100E0D2femto",outfile,maxFiles,inputlist);
     //createHistograms("/u/mkurach/lustre/hades/user/kjedrzej/HubbDeltMotornenko/H225E4D4femto",outfile,maxFiles,inputlist);
-    createHistograms("/u/mkurach/lustre/hades/user/kjedrzej/HubbDeltMotoMoto/H165E6D4femto",outfile,maxFiles,inputlist);
+    //createHistograms("/u/mkurach/lustre/hades/user/kjedrzej/HubbDeltMotoMoto/H165E6D4femto",outfile,maxFiles,inputlist);
 
 	gROOT -> SetBatch(kFALSE);
 	return 0;
